@@ -4,7 +4,7 @@ import {authJWT} from "../middlewares/authJWT.js";
 
 const router = express.Router();
 
-router.post("/register", register);
+router.post("/create", register);
 router.post("/login", login);
 router.post("/logout", authJWT, logout); // Logout hanya bisa dilakukan oleh user yang sudah login
 
