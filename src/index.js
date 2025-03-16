@@ -7,7 +7,8 @@ import "./db/pg.js";     // Load PostgreSQL
 import "./db/mongo.js";  // Load MongoDB
 import cors from "cors";
 import userRoutes from "../src/routes/userRoutes.js"
-
+import paymentRoutes from "../src/routes/paymentRoutes.js"
+import routeRoutes from "../src/routes/routeRoutes.js"
 dotenv.config();
 console.log('mongo url :',process.env.MONGO_URL);
 
@@ -26,6 +27,8 @@ mongo().then(() => {
 
   app.use(express.json());
   app.use('/user',userRoutes)
+  app.use('/payment',paymentRoutes)
+  app.use('/route',routeRoutes)
 
   app.use(session({
     secret: process.env.JWT_SECRET || "default-secret", // ✅ Cegah error jika JWT_SECRET tidak ada

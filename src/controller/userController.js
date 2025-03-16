@@ -14,9 +14,13 @@ export const register = async (req, res) => {
   if (password !== retype_password) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
-
+  
   try {
     // Periksa apakah username atau email sudah ada
+    const validRoles = ["user", "admin", "developer"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
     const existingUser = await pool.query("SELECT * FROM users WHERE username = $1 OR email = $2", [username, email]);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: "Username or email already exists" });
@@ -73,7 +77,7 @@ export const login = async (req, res) => {
 
     // Buat token JWT
     const token = jwt.sign(
-      { id: user.id, user_id: user.user_id, username: user.username, email: user.email },
+      { id: user.id, user_id: user.user_id, username: user.username, email: user.email,role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );

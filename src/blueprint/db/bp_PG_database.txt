@@ -1,0 +1,98 @@
+CREATE TYPE user_role AS ENUM ('user', 'admin', 'developer', 'driver');
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(10) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    phone VARCHAR(20),
+    password TEXT NOT NULL,
+    role user_role DEFAULT 'user', -- ENUM role
+    created_time TIMESTAMP DEFAULT NOW(),
+    logout_time TIMESTAMP
+);
+
+
+CREATE TABLE active_routes (
+    id SERIAL PRIMARY KEY,
+    driver_id VARCHAR(50) NOT NULL REFERENCES users(username) ON DELETE CASCADE, 
+    pickup POINT NOT NULL,
+    dropoff POINT NOT NULL,
+    seats_available INT NOT NULL CHECK (seats_available > 0),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE payments ADD COLUMN order_id VARCHAR(50) UNIQUE;
+ALTER TABLE payments ADD COLUMN payment_method VARCHAR(20) DEFAULT 'digital';
+
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    booking_id INT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    user_id VARCHAR(10) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    amount DECIMAL(10,2) NOT NULL,
+
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(10) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    route_id INT NOT NULL REFERENCES active_routes(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+CREATE EXTENSION IF NOT EXISTS postgis; -- Pastikan PostGIS terpasang
+
+CREATE TABLE geo_fences (
+    id SERIAL PRIMARY KEY,
+    area_name VARCHAR(100) NOT NULL,
+    boundary GEOMETRY(POLYGON, 4326) NOT NULL
+);
+
+
+
+data table  :
+
+
+
+INSERT INTO users (user_id, username, email, first_name, last_name, phone, password, role) VALUES
+('a1b2c3', 'admin1', 'admin1@gmail.com', 'Admin', 'One', '08123456789', '$2b$10$abcd1234hashedpass', 'admin'),
+('d4e5f6', 'driver1', 'driver1@gmail.com', 'John', 'Doe', '08123456788', '$2b$10$efgh5678hashedpass', 'driver'),
+('g7h8i9', 'user1', 'user1@gmail.com', 'Jane', 'Doe', '08123456787', '$2b$10$ijkl9101hashedpass', 'user');
+
+
+INSERT INTO active_routes (driver_id, pickup, dropoff, seats_available) VALUES
+('driver1', POINT(-6.200, 106.816), POINT(-6.175, 106.827), 3),
+('driver1', POINT(-6.300, 106.900), POINT(-6.250, 106.850), 4),
+('driver1', POINT(-6.500, 107.000), POINT(-6.450, 106.950), 2);
+
+
+INSERT INTO active_routes (driver_id, pickup, dropoff, seats_available) VALUES
+('driver1', POINT(-6.200, 106.816), POINT(-6.175, 106.827), 3),
+('driver1', POINT(-6.300, 106.900), POINT(-6.250, 106.850), 4),
+('driver1', POINT(-6.500, 107.000), POINT(-6.450, 106.950), 2);
+
+
+INSERT INTO bookings (user_id, route_id, status) VALUES
+('g7h8i9', 1, 'pending'),
+('g7h8i9', 2, 'confirmed'),
+('g7h8i9', 3, 'canceled');
+
+
+INSERT INTO payments (booking_id, user_id, amount, status) VALUES
+(1, 'g7h8i9', 50000.00, 'pending'),
+(2, 'g7h8i9', 75000.00, 'paid'),
+(3, 'g7h8i9', 60000.00, 'failed');
+
+
+INSERT INTO geo_fences (area_name, boundary) VALUES
+('Jabodetabek', ST_GeomFromText('POLYGON((106.700 -6.400, 106.900 -6.400, 106.900 -6.100, 106.700 -6.100, 106.700 -6.400))', 4326)),
+('Bandung Raya', ST_GeomFromText('POLYGON((107.500 -6.900, 107.700 -6.900, 107.700 -6.600, 107.500 -6.600, 107.500 -6.900))', 4326)),
+('Surabaya Metro', ST_GeomFromText('POLYGON((112.600 -7.400, 112.800 -7.400, 112.800 -7.100, 112.600 -7.100, 112.600 -7.400))', 4326));
