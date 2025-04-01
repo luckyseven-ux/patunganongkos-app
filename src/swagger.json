@@ -1,0 +1,445 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Patungan Ongkos Backend API",
+      "version": "1.0.0",
+      "description": "This is the backend API for Patungan Ongkos ride-sharing platform. It supports user registration, login, route management, and payment processing with Midtrans integration."
+    },
+    "servers": [
+      {
+        "url": "http://localhost:3000",
+        "description": "Local server"
+      }
+    ],
+    "paths": {
+      "/api/users/register": {
+        "post": {
+          "summary": "Register a new user",
+          "description": "Register a new user with required details and role. Allowed roles are user, admin, developer, and driver.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRegister"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "User registered successfully"
+            },
+            "400": {
+              "description": "Invalid input or duplicate user"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/users/login": {
+        "post": {
+          "summary": "User login",
+          "description": "Authenticate user and get JWT token.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLogin"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful, JWT token returned"
+            },
+            "400": {
+              "description": "Invalid credentials"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/users/logout": {
+        "post": {
+          "summary": "User logout",
+          "description": "Logout the authenticated user.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Logout recorded successfully"
+            },
+            "400": {
+              "description": "User not found"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/routes": {
+        "post": {
+          "summary": "Create a new route",
+          "description": "Allows user, admin, or driver to create a new route.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteCreate"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Route created successfully"
+            },
+            "403": {
+              "description": "Forbidden: Role not allowed to create route"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        },
+        "get": {
+          "summary": "Get all routes",
+          "description": "Retrieve all active routes.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Routes retrieved successfully"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/routes/driver": {
+        "get": {
+          "summary": "Get driver's own routes",
+          "description": "Retrieve routes created by the authenticated driver.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Driver routes retrieved successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only drivers can access this endpoint"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/routes/{id}": {
+        "delete": {
+          "summary": "Delete a route",
+          "description": "Allows only admin to delete a route by ID.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "ID of the route to delete"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Route deleted successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only admin can delete routes"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/payments": {
+        "post": {
+          "summary": "Create a payment",
+          "description": "Allows user to create a payment (digital or cash) for a booking.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentCreate"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Payment created successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only users can create payments"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        },
+        "get": {
+          "summary": "Get user payments",
+          "description": "Allows a user to retrieve their payments.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User payments retrieved successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only users can access their payments"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/payments/all": {
+        "get": {
+          "summary": "Get all payments",
+          "description": "Allows admin and developer to retrieve all payments.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "All payments retrieved successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only admin and developer can access all payments"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/payments/driver": {
+        "get": {
+          "summary": "Get driver payments",
+          "description": "Allows driver to retrieve payments related to their routes.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Driver payments retrieved successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only drivers can access this endpoint"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/payments/confirm-cash": {
+        "post": {
+          "summary": "Confirm cash payment",
+          "description": "Allows a driver to confirm a cash payment.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashPaymentConfirm"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Cash payment confirmed successfully"
+            },
+            "403": {
+              "description": "Forbidden: Only drivers can confirm cash payments"
+            },
+            "500": {
+              "description": "Database error"
+            }
+          }
+        }
+      },
+      "/api/payments/midtrans-callback": {
+        "post": {
+          "summary": "Midtrans callback",
+          "description": "Endpoint to receive Midtrans payment status callback and update payment status in the database.",
+          "responses": {
+            "200": {
+              "description": "Payment status updated successfully"
+            },
+            "500": {
+              "description": "Error updating payment status"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "UserRegister": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "retype_password": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["user", "admin", "developer", "driver"],
+              "default": "user"
+            }
+          },
+          "required": ["username", "email", "password", "retype_password"]
+        },
+        "UserLogin": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          },
+          "required": ["password"]
+        },
+        "RouteCreate": {
+          "type": "object",
+          "properties": {
+            "pickup": {
+              "type": "string",
+              "description": "Coordinates in format 'POINT(longitude latitude)'"
+            },
+            "dropoff": {
+              "type": "string",
+              "description": "Coordinates in format 'POINT(longitude latitude)'"
+            },
+            "seats_available": {
+              "type": "integer"
+            }
+          },
+          "required": ["pickup", "dropoff", "seats_available"]
+        },
+        "PaymentCreate": {
+          "type": "object",
+          "properties": {
+            "booking_id": {
+              "type": "integer"
+            },
+            "amount": {
+              "type": "number"
+            },
+            "payment_method": {
+              "type": "string",
+              "enum": ["digital", "cash"],
+              "default": "digital"
+            }
+          },
+          "required": ["booking_id", "amount", "payment_method"]
+        },
+        "CashPaymentConfirm": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string"
+            }
+          },
+          "required": ["order_id"]
+        }
+      },
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ]
+  }
+  

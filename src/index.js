@@ -9,12 +9,30 @@ import cors from "cors";
 import userRoutes from "../src/routes/userRoutes.js"
 import paymentRoutes from "../src/routes/paymentRoutes.js"
 import routeRoutes from "../src/routes/routeRoutes.js"
+import rateLimit from "express-rate-limit";
+import morgan from "morgan";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./swagger.json" assert { type: "json" };
+import connectRabbitMQ from "./db/rabbitMq.js";
+
+
+
+const apilimiter=rateLimit({
+  windowMs:15*60*1000,
+  max:100,
+  message:'Too Many Request, Try Again Later !! 🤦‍♂️'
+})
 dotenv.config();
 console.log('mongo url :',process.env.MONGO_URL);
 
 const app = express();
 const port = 3000;
+
+connectRabbitMQ()
+app.use('/api/',apilimiter)
 app.use(cors());
+app.use(morgan("dev"))
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Pastikan koneksi MongoDB berjalan sebelum membuat sessionStore
 mongo().then(() => {
